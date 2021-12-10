@@ -1,9 +1,6 @@
 package com.watcherr.backend.services
 
-import com.watcherr.backend.dtos.ForgottenPasswordDTO
-import com.watcherr.backend.dtos.LoginUserDTO
-import com.watcherr.backend.dtos.Profile
-import com.watcherr.backend.dtos.RegisterUserDTO
+import com.watcherr.backend.dtos.*
 import com.watcherr.backend.entities.User
 import com.watcherr.backend.repositories.UserRepository
 import io.jsonwebtoken.Jwts
@@ -39,7 +36,8 @@ class UserService(private val passwordEncoder: BCryptPasswordEncoder, private va
             name = user.name,
             id = user.id!!,
             likedShows = null,
-            imageUrl = imageUrl
+            imageUrl = imageUrl,
+            followed=null,
         )
     }
 
@@ -78,13 +76,67 @@ class UserService(private val passwordEncoder: BCryptPasswordEncoder, private va
         userRepository.save(foundUser.copy(password = passwordEncoder.encode(user.newPassword)))
     }
 
-    fun getUserById(id: Long): User {
+    fun getUserById(id: Long):User{
         if (!userRepository.existsById(id)) {
             throw Exception("User doesn't exist with given id")
         }
         return userRepository.findById(id).get()
     }
 
+    fun getProfileById(id: Long): GetDescriptiveUserDTO {
+        if (!userRepository.existsById(id)) {
+            throw Exception("User doesn't exist with given id")
+        }
+        val user: User = userRepository.findById(id).get()
+        var imageUrl = ""
+        if (user.profilePicture != null) {
+            imageUrl = "http://localhost:8080/api/user/${user.id}/picture"
+        }
+        return GetDescriptiveUserDTO(
+            name = user.name,
+            id = user.id!!,
+            imageUrl = imageUrl,
+            likedShows = user.likedShows?.map { show ->
+                GetShowForListDTO(
+                    apiId = show.apiId,
+                    imgSrc = show.imgSrc,
+                    name = show.name,
+                    status = show.status,
+                    ratingAverage = show.ratingAverage
+                )
+
+            },
+            followed=user.followedUsers?.map{followed->
+                var image = ""
+                if (followed.profilePicture != null) {
+                    image = "http://localhost:8080/api/user/${followed.id}/picture"
+                }
+                Profile(
+                    name = followed.name,
+                    id = followed.id!!,
+                    likedShows = null,
+                    imageUrl = image,
+                    followed = null
+                )
+            },
+            followers = user.followers?.map { follower ->
+                var img = ""
+                if (follower.profilePicture != null) {
+                    img = "http://localhost:8080/api/user/${follower.id}/picture"
+                }
+                Profile(
+                    name = follower.name,
+                    id = follower.id!!,
+                    likedShows = null,
+                    imageUrl = img,
+                    followed = null
+                )
+            }
+        )
+    }
+
     fun saveUser(user: User): User = userRepository.save(user)
+
+    fun existsById(id: Long): Boolean = userRepository.existsById(id)
 
 }

@@ -19,21 +19,22 @@ class ExternalShowService(private val restTemplate: RestTemplate) {
     val BASE_URI = "https://api.tvmaze.com/shows"
 
     fun getAllShows(page: Long): List<GetShowForListDTO>? {
-        val response = restTemplate.exchange(
-            BASE_URI.plus("?page=").plus(page),
-            HttpMethod.GET,
-            null,
-            typeRef<List<ExternalShowDTO>>()
-        )
-        return response.body?.map { showDTO ->
-            GetShowForListDTO(
-                apiId = showDTO.id,
-                imgSrc = showDTO.image?.original.orEmpty(),
-                name = showDTO.name,
-                status = showDTO.status.orEmpty(),
-                ratingAverage = showDTO.rating?.average
+            val response: ResponseEntity<List<ExternalShowDTO>> = restTemplate.exchange(
+                BASE_URI.plus("?page=").plus(page),
+                HttpMethod.GET,
+                null,
+                typeRef<List<ExternalShowDTO>>()
             )
-        }
+            return response.body?.map { showDTO ->
+                GetShowForListDTO(
+                    apiId = showDTO.id,
+                    imgSrc = showDTO.image?.original.orEmpty(),
+                    name = showDTO.name,
+                    status = showDTO.status.orEmpty(),
+                    ratingAverage = showDTO.rating?.average
+                )
+            }
+
     }
 
     fun getShowById(id: Int): GetDescriptiveShowDTO {

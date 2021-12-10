@@ -20,7 +20,8 @@ class JwtUtils(private val userService: UserService) {
         if (user.profilePicture != null) {
             imageUrl = "http://localhost:8080/api/user/${user.id}/picture"
         }
-        return Profile(user.id!!, user.name,
+        return Profile(
+            user.id!!, user.name,
             user.likedShows?.map { show ->
                 GetShowForListDTO(
                     apiId = show.apiId,
@@ -29,7 +30,21 @@ class JwtUtils(private val userService: UserService) {
                     status = show.status,
                     ratingAverage = show.ratingAverage
                 )
-            }, imageUrl = imageUrl
+            },
+            imageUrl = imageUrl,
+            followed = user.followedUsers?.map { followed ->
+                var image = ""
+                if (followed.profilePicture != null) {
+                    image = "http://localhost:8080/api/user/${user.id}/picture"
+                }
+                Profile(
+                    name = followed.name,
+                    id = followed.id!!,
+                    likedShows = null,
+                    imageUrl = image,
+                    followed = null
+                )
+            },
         )
     }
 }

@@ -21,7 +21,17 @@ data class User(
         joinColumns = [JoinColumn(name = "user_id")],
         inverseJoinColumns = [JoinColumn(name="show_id")])
     @Fetch(FetchMode.JOIN)
-    val likedShows: List<Show>?= emptyList(),
+    val likedShows: Set<Show>?= emptySet(),
+    @ManyToMany
+    @JoinTable(
+        name = "user_follows",
+        joinColumns = [ JoinColumn(name = "follower") ],
+        inverseJoinColumns = [ JoinColumn(name = "followed") ]
+    )
+    @Fetch(FetchMode.JOIN)
+    val followedUsers:Set<User>?= emptySet(),
+    @ManyToMany(mappedBy = "followedUsers")
+    val followers:Set<User>?= emptySet(),
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

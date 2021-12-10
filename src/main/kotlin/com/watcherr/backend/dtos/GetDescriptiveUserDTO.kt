@@ -1,11 +1,10 @@
 package com.watcherr.backend.dtos
 
-import com.watcherr.backend.entities.Show
-
-data class Profile(
+data class GetDescriptiveUserDTO(
     val id: Long,
     val name: String,
     val likedShows: List<GetShowForListDTO>?,
     val followed: List<Profile>?,
+    val followers: List<Profile>?,
     val imageUrl: String?
 )

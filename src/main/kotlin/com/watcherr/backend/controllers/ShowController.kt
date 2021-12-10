@@ -7,6 +7,7 @@ import com.watcherr.backend.dtos.GetShowForListDTO
 import com.watcherr.backend.dtos.Profile
 import com.watcherr.backend.entities.Show
 import com.watcherr.backend.services.ExternalShowService
+import com.watcherr.backend.services.NotificationService
 import com.watcherr.backend.services.ShowService
 import com.watcherr.backend.services.UserService
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,7 +21,7 @@ import org.springframework.web.client.RestTemplate
 @RestController
 @CrossOrigin
 @RequestMapping("/api/show")
-class ShowController(private val externalShowService: ExternalShowService, private val userService: UserService, private val showService: ShowService) {
+class ShowController(private val externalShowService: ExternalShowService, private val userService: UserService, private val showService: ShowService, private val notificationService: NotificationService) {
 
     @Autowired
     lateinit var jwtUtils: JwtUtils
@@ -39,7 +40,7 @@ class ShowController(private val externalShowService: ExternalShowService, priva
         val user: Profile = jwtUtils.getUserFromJwt(token)
         val foundUser = userService.getUserById(user.id)
         val show: GetDescriptiveShowDTO = externalShowService.getShowById(id)
-        val likedShows = foundUser.likedShows as MutableList<Show>
+        val likedShows = foundUser.likedShows as MutableSet<Show>
         val foundShow = showService.getShowById(show.apiId)
         if(foundShow.isPresent){
             likedShows.add(foundShow.get())
@@ -50,6 +51,7 @@ class ShowController(private val externalShowService: ExternalShowService, priva
             likedShows.add(addedShow)
             userService.saveUser(foundUser.copy(likedShows = likedShows))
         }
+        notificationService.likeNotify(foundUser,show.name)
         return ResponseEntity.ok().build()
     }
 
@@ -57,7 +59,7 @@ class ShowController(private val externalShowService: ExternalShowService, priva
     fun unlikeShow(@RequestHeader("Authorization") token: String, @PathVariable id:Long):ResponseEntity<Any>{
         val user: Profile = jwtUtils.getUserFromJwt(token)
         val foundUser = userService.getUserById(user.id)
-        val likedShows = foundUser.likedShows as MutableList<Show>
+        val likedShows = foundUser.likedShows as MutableSet<Show>
         val foundShow = showService.getShowById(id)
         if(foundShow.isPresent){
             likedShows.remove(foundShow.get())
